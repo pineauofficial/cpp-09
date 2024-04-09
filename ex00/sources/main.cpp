@@ -80,6 +80,25 @@ int parse_key_data(std::string const &tmp) {
 		return 1;
 	if (atoi(day.c_str()) > 31)
 		return 1;
+
+	int year_int = atoi(year.c_str());
+    int month_int = atoi(month.c_str());
+    int day_int = atoi(day.c_str());
+	
+	if ((month_int == 4 || month_int == 6 || month_int == 9 || month_int == 11) && day_int > 30)
+        return 1;
+    if (month_int == 2) 
+	{
+        if (year_int % 4 == 0) 
+		{
+            if (day_int > 29)
+                return 1;
+        } else 
+		{
+            if (day_int > 28)
+                return 1;
+        }
+    }
 	if (tmp[10] != ',')
 		return 1;
 	return 0;
