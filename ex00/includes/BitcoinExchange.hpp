@@ -7,5 +7,9 @@
 #include <cctype>
 #include <cstdlib>
 #include <string>
+#include <sys/stat.h>
+#include <stdbool.h>
+#include <unistd.h>
+
 
 #endif
