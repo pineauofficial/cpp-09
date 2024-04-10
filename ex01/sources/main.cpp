@@ -77,7 +77,7 @@ int calcul(std::stack<long long int> &stack, char *argv) {
 			stack.pop();
 			stack.push(result);
 		}
-		if (stack.top() > 2147483647)
+		if (argv[i] != ' ' && stack.top() > 2147483647)
 			return 1;
 	}
 	std::cout << stack.top() << std::endl;
