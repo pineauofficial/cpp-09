@@ -1,10 +1,11 @@
 #include "BitcoinExchange.hpp"
 
 int parse_key_file(std::string const &tmp) {
+	if (tmp.size() < 14)
+		return 1;
     std::string year = tmp.substr(0, 4);
     std::string month = tmp.substr(5, 2);
     std::string day = tmp.substr(8, 2);
-
     for (size_t i = 0; i < year.length(); ++i)
         if (!isdigit(year[i]))
             return 1;
@@ -14,7 +15,6 @@ int parse_key_file(std::string const &tmp) {
     for (size_t i = 0; i < day.length(); ++i)
         if (!isdigit(day[i]))
             return 1;
-
     int year_int = atoi(year.c_str());
     int month_int = atoi(month.c_str());
     int day_int = atoi(day.c_str());
@@ -26,7 +26,8 @@ int parse_key_file(std::string const &tmp) {
     if (tmp[10] != ' ' || tmp[11] != '|' || tmp[4] != '-' || tmp[7] != '-')
         return 1;
     if ((month_int == 4 || month_int == 6 || month_int == 9 || month_int == 11) && day_int > 30)
-        return 1;
+		return 1;
+
     if (month_int == 2) 
 	{
         if (year_int % 4 == 0) 
@@ -57,7 +58,7 @@ float parse_value_file(std::string const &tmp) {
 	int i = 13;
 	while (tmp[i++])
 		j++;
-	if (atol(tmp.substr(13, j).c_str()) > 2147483647)
+	if (atol(tmp.substr(13, j).c_str()) > 1000)
 		return -3;
 	return atof(tmp.substr(13, j).c_str());
 }
@@ -168,16 +169,28 @@ void calcul(std::string const &tmp, float value, std::map<std::string, float> &m
 			break ;
 		}
 	}
-	if (!found) {
+	if (!found) 
+	{
         std::map<std::string, float>::reverse_iterator rit;
-        for (rit = map.rbegin(); rit != map.rend(); ++rit) {
-            if ((*rit).first < date) {
+        for (rit = map.rbegin(); rit != map.rend(); ++rit) 
+		{
+            if ((*rit).first < date)
+			{
                 std::cout << (*rit).first << " => " << value * (*rit).second << std::endl;
-                break;
+				return ;
             }
         }
+		std::map<std::string, float>::reverse_iterator rit2;
+		std::string lowest_date;
+        for (rit2 = map.rbegin(); rit2 != map.rend(); ++rit2) 
+		{
+            if ((*rit2).first < date)
+                lowest_date = (*rit2).first;
+			if (date < (*rit2).first)
+				lowest_date = date;
+        }
+        std::cout << lowest_date << " => " << 0 << std::endl;
     }
-
 }
 
 int check_infile(std::ifstream &infile, std::map<std::string, float> &map) {
