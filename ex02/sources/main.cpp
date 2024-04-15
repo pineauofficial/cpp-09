@@ -16,6 +16,8 @@ void printVector(const std::vector<int> &vec, std::string const &name) {
 int parse(char **argv) {
 	for (int i = 1; argv[i]; i++)
 	{
+		if (atol(argv[i]) > 2147483647 || atol(argv[i]) < 0)
+			return 1;
 		for (int j = 0; argv[i][j]; j++)
 		{
 			if (argv[i][0] == '-' && argv[i][1] && isdigit(argv[i][1]))
@@ -34,44 +36,231 @@ void fill_vector(std::vector<int> &vec, char **argv) {
 		vec.push_back(atoi(argv[i]));
 }
 
-void compare_and_swap(std::vector<int> &vec) {
-	if (vec.front() < vec.back())
-		std::swap(vec.front(), vec.back());
+void insert_element_at(std::vector<int> &vec, int element, size_t position) {
+	vec.insert(vec.begin() + position, element);
 }
 
-std::vector<int> get_sequence(std::vector<int> &vec) {
-    std::vector<int> sequence;
+size_t binary_search(std::vector<int> &vec, int target, size_t pos) {
+    size_t left = 0;
+	size_t right = pos;
+	size_t mid;
 
-	if (vec.size() <= 2)
+    while (left < right)
 	{
-		compare_and_swap(vec);
-		sequence.push_back(vec.front());
-        return sequence;
+        mid = left + (right - left) / 2;
+        if (vec[mid] < target)
+		{
+			left = mid + 1;
+		}
+		else
+            right = mid;
+    }
+
+    return left;	
+}
+
+size_t find(std::vector<int> &vec, int target) {
+	size_t i = 0;
+	while (vec[i] != target)	
+		i++;
+	return i;
+}
+
+void merge_sequences(std::vector<int> &sequence, std::vector<int> &tmp, std::vector<int> &save) {
+	size_t i = 0;
+
+	while (i < tmp.size() && tmp[i] && save[i])
+	{
+		insert_element_at(sequence, tmp[i], binary_search(sequence, tmp[i], find(sequence, save[i])));
+		i++;
+	}
+}
+
+void rearrange_tmp(std::vector<int> &tmp) {
+	size_t group = 6;
+	size_t group_m = 2;
+	size_t group_m_m = 2;
+
+	if (tmp.size() >= 2 && tmp[0] && tmp[1])
+        std::swap(tmp[0], tmp[1]);
+    if (tmp.size() >= 4 && tmp[2] && tmp[3])
+	{
+        std::swap(tmp[2], tmp[3]);
+	}
+	size_t i = 4;
+	size_t j;
+	if (tmp.size() >= 10)
+		j = 9;
+	else
+		j = tmp.size()-1;
+	size_t groups = 10;
+	int mode;
+	while (i < tmp.size())
+	{
+		if (i < j)
+		{
+			std::swap(tmp[i], tmp[j]);
+			mode = 0;
+		}
+		else
+		{
+			int gtmp = group_m;
+			group_m = group;
+			group_m_m = gtmp;
+			group = group_m + (group_m_m * 2);
+
+			if (groups < tmp.size() && tmp[groups])
+				i = groups;
+			else
+				break;
+			groups = groups + group;
+			if (tmp.size() >= groups)
+				j = groups -1;
+			else
+				j = tmp.size()-1;
+			mode = 1;
+		}
+		if (mode == 0)
+		{
+			i++;
+			j--;
+		}
 	}
 
-    std::vector<int> p1(vec.begin(), vec.begin() + vec.size() / 2);
-    std::vector<int> p2(vec.begin() + vec.size() / 2, vec.end());
+}
 
-	printVector(p1, "p1");
-	printVector(p2, "p2");
-   	
-	p1 = get_sequence(p1);
-    p2 = get_sequence(p2);
+void merge(std::vector<int> &sequence, const std::vector<int> &p1, const std::vector<int> &p2) {
+    unsigned int i = 0, j = 0, k = 0;
+    while (i < p1.size() && j < p2.size())
+	{
+        if (p1[i] < p2[j])
+            sequence[k++] = p1[i++];
+        else
+            sequence[k++] = p2[j++];
+    }
+    while (i < p1.size())
+        sequence[k++] = p1[i++];
+    while (j < p2.size())
+        sequence[k++] = p2[j++];
+}
 
-    sequence.insert(sequence.end(), p1.begin(), p1.end());
-    sequence.insert(sequence.end(), p2.begin(), p2.end());
+void merge_sort(std::vector<int> &sequence) {
+    if (sequence.size() <= 1)
+        return;
 
-	printVector(sequence, "sequence");
+    std::vector<int> p1(sequence.begin(), sequence.begin() + sequence.size() / 2);
+    std::vector<int> p2(sequence.begin() + sequence.size() / 2, sequence.end());
 
-    return sequence;
+    merge_sort(p1);
+    merge_sort(p2);
+
+    merge(sequence, p1, p2);
+}
+
+void get_sequence(std::vector<int> &vec, std::vector<int> &sequence, std::vector<int> &tmp) {
+	size_t i = 0;
+	while (i < vec.size())
+	{
+		if (vec[i] && !vec[i + 1])
+			sequence.push_back(vec[i]);
+		else if (vec[i] > vec[i + 1])
+		{
+			sequence.push_back(vec[i]);
+			tmp.push_back(vec[i + 1]);
+		}
+		else
+		{
+			sequence.push_back(vec[i + 1]);
+			tmp.push_back(vec[i]);
+		}
+		i = i + 2;
+	}
+}
+
+void sort_vector(std::vector<int> &vec) {
+	size_t i = 0;
+	size_t j = 0;
+	while (i < vec.size())
+	{
+		if (vec[i] < vec[i + 1] && vec[i + 1])
+			std::swap(vec[i], vec[i + 1]);
+		i = i + 2;
+	}
+	i = 0;
+	while (i < vec.size())
+	{
+		j = i + 2;
+		while(j < vec.size())
+		{
+			if (vec[i] > vec[j] && vec[j] && vec[j + 1])
+			{
+				std::swap(vec[i], vec[j]);
+				std::swap(vec[i + 1], vec[j + 1]);
+			}
+			j = j + 2;
+		}
+		i = i + 2;
+	}
+}
+
+int check_doublon(std::vector<int> &vec) {
+	size_t i = 0;
+	size_t j = 0;
+	while (i < vec.size())
+	{
+		j = i + 1;
+		while (j < vec.size())
+		{
+			if (vec[i] == vec[j])
+				return 1;
+			j++;
+		}
+		i++;
+	}
+	return 0;
 }
 
 int main(int argc, char **argv) {
-	if (argc < 2 || parse(argv))
-		return std::cout << "A number sequence is required" << std::endl, 1;
-	std::vector<int> vec;
-	fill_vector(vec, argv);
-	vec = get_sequence(vec);
+	clock_t start = clock();
 
-	return std::cout << "All good" << std::endl, 0;
+	if (argc < 2 || parse(argv))
+		return std::cout << "A positive number sequence from 0 to 2147483647 is required" << std::endl, 1;
+
+	std::vector<int> vec;
+	std::vector<int> sequence;
+	std::vector<int> tmp;
+	std::vector<int> save;
+	int last_number = -1;
+
+	fill_vector(vec, argv);
+	if (check_doublon(vec))
+		return std::cout << "The sequence must not contain duplicates" << std::endl, 1;
+	if (vec.size() % 2 != 0)
+	{
+		last_number = vec[vec.size() - 1];
+		vec.pop_back();
+	}
+
+	sort_vector(vec);
+	get_sequence(vec, sequence, tmp);
+	merge_sort(sequence);
+	save.insert(save.end(), sequence.begin(), sequence.end());
+	rearrange_tmp(tmp);
+	rearrange_tmp(save);
+	merge_sequences(sequence, tmp, save);
+
+	if (last_number > 0)
+		insert_element_at(sequence, last_number, binary_search(sequence, last_number, sequence.size()));
+	
+	printVector(sequence, "S post merge");
+
+	clock_t end = clock();
+	double elapsed_secs = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Le programme a pris " << elapsed_secs << " secondes pour s'exécuter." << std::endl;
+
+	/******************************************************************************************/
+	/****************************************DEQUE PART****************************************/
+	/******************************************************************************************/
+
+	return 0;
 }
